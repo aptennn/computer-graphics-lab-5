@@ -18,6 +18,8 @@ add_executable(computer_graphics_lab5
     mainwindow.h
     mountainwidget.cpp
     mountainwidget.h
+    bezierwidget.cpp
+    bezierwidget.h
 )
 
 target_link_libraries(computer_graphics_lab5

@@ -10,6 +10,7 @@ class QDoubleSpinBox;
 class QCheckBox;
 class QPushButton;
 class QLabel;
+class BezierWidget;
 
 class MainWindow : public QMainWindow
 {
@@ -24,6 +25,7 @@ private slots:
 
 private:
     MountainWidget *m_view = nullptr;
+    BezierWidget *m_bezierView = nullptr;
 
     QSpinBox       *m_depthBox = nullptr;
     QDoubleSpinBox *m_dispBox = nullptr;

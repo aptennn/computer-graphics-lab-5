@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "mountainwidget.h"
+#include "bezierwidget.h"
 
 #include <QWidget>
 #include <QVBoxLayout>
@@ -11,15 +12,21 @@
 #include <QCheckBox>
 #include <QPushButton>
 #include <QLabel>
+#include <QTabWidget>
 #include <QRandomGenerator>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
-    setWindowTitle("Midpoint Displacement — горный массив");
+    setWindowTitle("Компьютерная графика — лабораторная работа 5");
 
     QWidget *central = new QWidget(this);
-    QHBoxLayout *mainLayout = new QHBoxLayout(central);
+    QVBoxLayout *rootLayout = new QVBoxLayout(central);
+    QTabWidget *tabs = new QTabWidget(central);
+    rootLayout->addWidget(tabs);
+
+    QWidget *mountainTab = new QWidget(tabs);
+    QHBoxLayout *mainLayout = new QHBoxLayout(mountainTab);
 
     m_view = new MountainWidget(this);
     mainLayout->addWidget(m_view, 1);
@@ -67,6 +74,24 @@ MainWindow::MainWindow(QWidget *parent)
     panelWidget->setFixedWidth(240);
 
     mainLayout->addWidget(panelWidget, 0);
+
+    tabs->addTab(mountainTab, "2. Горный массив");
+
+    QWidget *bezierTab = new QWidget(tabs);
+    QVBoxLayout *bezierLayout = new QVBoxLayout(bezierTab);
+    m_bezierView = new BezierWidget(bezierTab);
+    bezierLayout->addWidget(m_bezierView, 1);
+
+    QHBoxLayout *bezierButtons = new QHBoxLayout;
+    QPushButton *resetBezier = new QPushButton("Восстановить пример", bezierTab);
+    QPushButton *clearBezier = new QPushButton("Очистить точки", bezierTab);
+    bezierButtons->addWidget(resetBezier);
+    bezierButtons->addWidget(clearBezier);
+    bezierButtons->addStretch();
+    bezierLayout->addLayout(bezierButtons);
+    connect(resetBezier, &QPushButton::clicked, m_bezierView, &BezierWidget::resetExample);
+    connect(clearBezier, &QPushButton::clicked, m_bezierView, &BezierWidget::clearPoints);
+    tabs->addTab(bezierTab, "3. Кривые Безье");
 
     setCentralWidget(central);
     resize(1000, 600);
