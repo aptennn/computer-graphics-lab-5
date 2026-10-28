@@ -31,7 +31,6 @@ private:
     QDoubleSpinBox *m_dispBox = nullptr;
     QDoubleSpinBox *m_roughBox = nullptr;
     QSpinBox       *m_seedBox = nullptr;
-    QCheckBox      *m_stepsCheck = nullptr;
     QPushButton    *m_randSeedBtn = nullptr;
 };
 

@@ -24,7 +24,6 @@ public:
     double initialDisplacement() const{ return m_initialDisplacement; }
     double roughness() const          { return m_roughness; }
     quint32 seed() const              { return m_seed; }
-    bool   showSteps() const          { return m_showSteps; }
 
 public slots:
     void regenerate();
@@ -47,7 +46,6 @@ private:
     double  m_initialDisplacement = 0.5;
     double  m_roughness = 0.5;
     quint32 m_seed = 12345;
-    bool    m_showSteps = true;
 
     QVector<Step> m_steps;
     QVector<QPointF> m_final;

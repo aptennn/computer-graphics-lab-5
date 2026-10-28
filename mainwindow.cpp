@@ -61,10 +61,6 @@ MainWindow::MainWindow(QWidget *parent)
     m_randSeedBtn = new QPushButton("Случайный seed", panel);
     form->addRow("", m_randSeedBtn);
 
-    m_stepsCheck = new QCheckBox("Шаги", panel);
-    m_stepsCheck->setChecked(m_view->showSteps());
-    form->addRow("", m_stepsCheck);
-
     QVBoxLayout *panelLayout = new QVBoxLayout;
     panelLayout->addWidget(panel);
     panelLayout->addStretch();
@@ -110,9 +106,6 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(m_randSeedBtn, &QPushButton::clicked,
             this, &MainWindow::onRandomSeed);
-
-    connect(m_stepsCheck, &QCheckBox::toggled,
-            this, [this](bool v){ m_view->setShowSteps(v); });
 }
 
 void MainWindow::onSeedChanged()

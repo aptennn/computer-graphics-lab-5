@@ -46,13 +46,6 @@ void MountainWidget::setSeed(quint32 seed)
     regenerate();
 }
 
-void MountainWidget::setShowSteps(bool show)
-{
-    if (m_showSteps == show) return;
-    m_showSteps = show;
-    update();
-}
-
 void MountainWidget::regenerate()
 {
     buildMountain();
@@ -146,20 +139,6 @@ void MountainWidget::paintEvent(QPaintEvent *event)
     painter.fillRect(rect(), QColor(20, 25, 40));
 
     if (m_steps.isEmpty()) return;
-
-    if (m_showSteps) {
-        for (int i = 0; i < m_steps.size() - 1; ++i) {
-            QVector<QPointF> pts = m_steps[i].points;
-            fitToWindow(pts);
-
-            QPen pen(m_steps[i].color);
-            pen.setWidthF(1.0);
-            painter.setPen(pen);
-            painter.setOpacity(0.35);
-            painter.drawPolyline(pts.data(), pts.size());
-        }
-        painter.setOpacity(1.0);
-    }
 
     QVector<QPointF> finalPts = m_final;
     fitToWindow(finalPts);
