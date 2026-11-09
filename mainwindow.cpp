@@ -1,120 +1,112 @@
 #include "mainwindow.h"
-#include "mountainwidget.h"
-#include "bezierwidget.h"
 
-#include <QWidget>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
+#include "bezierwidget.h"
+#include "mountainwidget.h"
+
+#include <QDoubleSpinBox>
 #include <QFormLayout>
 #include <QGroupBox>
-#include <QSpinBox>
-#include <QDoubleSpinBox>
-#include <QCheckBox>
-#include <QPushButton>
+#include <QHBoxLayout>
 #include <QLabel>
-#include <QTabWidget>
+#include <QPushButton>
 #include <QRandomGenerator>
+#include <QSlider>
+#include <QSpinBox>
+#include <QTabWidget>
+#include <QVBoxLayout>
 
-MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
+// Создаёт вкладки; реализацию частей 1а и 1б добавит Михаил.
+MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {
     setWindowTitle("Компьютерная графика — лабораторная работа 5");
-
-    QWidget *central = new QWidget(this);
-    QVBoxLayout *rootLayout = new QVBoxLayout(central);
-    QTabWidget *tabs = new QTabWidget(central);
-    rootLayout->addWidget(tabs);
-
-    QWidget *mountainTab = new QWidget(tabs);
-    QHBoxLayout *mainLayout = new QHBoxLayout(mountainTab);
-
-    m_view = new MountainWidget(this);
-    mainLayout->addWidget(m_view, 1);
-
-    QGroupBox *panel = new QGroupBox("Параметры", this);
-    QFormLayout *form = new QFormLayout(panel);
-
-    m_depthBox = new QSpinBox(panel);
-    m_depthBox->setRange(0, 16);
-    m_depthBox->setValue(m_view->depth());
-    form->addRow("Глубина (шаги):", m_depthBox);
-
-    m_dispBox = new QDoubleSpinBox(panel);
-    m_dispBox->setRange(0.0, 1.0);
-    m_dispBox->setSingleStep(0.05);
-    m_dispBox->setDecimals(2);
-    m_dispBox->setValue(m_view->initialDisplacement());
-    form->addRow("Нач. смещение:", m_dispBox);
-
-    m_roughBox = new QDoubleSpinBox(panel);
-    m_roughBox->setRange(0.0, 1.0);
-    m_roughBox->setSingleStep(0.05);
-    m_roughBox->setDecimals(2);
-    m_roughBox->setValue(m_view->roughness());
-    form->addRow("Затухание:", m_roughBox);
-
-    m_seedBox = new QSpinBox(panel);
-    m_seedBox->setRange(0, 999999);
-    m_seedBox->setValue(int(m_view->seed()));
-    form->addRow("Seed:", m_seedBox);
-
-    m_randSeedBtn = new QPushButton("Случайный seed", panel);
-    form->addRow("", m_randSeedBtn);
-
-    QVBoxLayout *panelLayout = new QVBoxLayout;
-    panelLayout->addWidget(panel);
-    panelLayout->addStretch();
-
-    QWidget *panelWidget = new QWidget(this);
-    panelWidget->setLayout(panelLayout);
-    panelWidget->setFixedWidth(240);
-
-    mainLayout->addWidget(panelWidget, 0);
-
-    tabs->addTab(mountainTab, "2. Горный массив");
-
-    QWidget *bezierTab = new QWidget(tabs);
-    QVBoxLayout *bezierLayout = new QVBoxLayout(bezierTab);
-    m_bezierView = new BezierWidget(bezierTab);
-    bezierLayout->addWidget(m_bezierView, 1);
-
-    QHBoxLayout *bezierButtons = new QHBoxLayout;
-    QPushButton *resetBezier = new QPushButton("Восстановить пример", bezierTab);
-    QPushButton *clearBezier = new QPushButton("Очистить точки", bezierTab);
-    bezierButtons->addWidget(resetBezier);
-    bezierButtons->addWidget(clearBezier);
-    bezierButtons->addStretch();
-    bezierLayout->addLayout(bezierButtons);
-    connect(resetBezier, &QPushButton::clicked, m_bezierView, &BezierWidget::resetExample);
-    connect(clearBezier, &QPushButton::clicked, m_bezierView, &BezierWidget::clearPoints);
-    tabs->addTab(bezierTab, "3. Кривые Безье");
-
-    setCentralWidget(central);
-    resize(1000, 600);
-
-    connect(m_depthBox, QOverload<int>::of(&QSpinBox::valueChanged),
-            this, [this](int v){ m_view->setDepth(v); });
-
-    connect(m_dispBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
-            this, [this](double v){ m_view->setInitialDisplacement(v); });
-
-    connect(m_roughBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
-            this, [this](double v){ m_view->setRoughness(v); });
-
-    connect(m_seedBox, QOverload<int>::of(&QSpinBox::valueChanged),
-            this, &MainWindow::onSeedChanged);
-
-    connect(m_randSeedBtn, &QPushButton::clicked,
-            this, &MainWindow::onRandomSeed);
+    auto *tabs = new QTabWidget(this);
+    tabs->addTab(new QWidget(tabs), "1а. L-системы — Михаил");
+    tabs->addTab(new QWidget(tabs), "1б. Дерево — Михаил");
+    tabs->addTab(createMountainTab(), "2. Горный массив — Лилия");
+    tabs->addTab(createBezierTab(), "3. Кривая Безье — Егор");
+    setCentralWidget(tabs);
+    resize(1100, 700);
 }
 
-void MainWindow::onSeedChanged()
+// Показывает алгоритм из лекции 6 по одному поколению; R задаёт шероховатость.
+QWidget *MainWindow::createMountainTab()
 {
-    m_view->setSeed(quint32(m_seedBox->value()));
+    auto *tab = new QWidget(this);
+    auto *layout = new QHBoxLayout(tab);
+    m_mountainView = new MountainWidget(tab);
+    layout->addWidget(m_mountainView, 1);
+    auto *panel = new QGroupBox("Параметры", tab);
+    auto *form = new QFormLayout(panel);
+
+    auto *depth = new QSpinBox(panel);
+    depth->setRange(0, 16);
+    depth->setValue(m_mountainView->depth());
+    form->addRow("Глубина:", depth);
+    connect(depth, QOverload<int>::of(&QSpinBox::valueChanged), m_mountainView,
+            &MountainWidget::setDepth);
+
+    auto *roughness = new QDoubleSpinBox(panel);
+    roughness->setRange(0.0, 1.0);
+    roughness->setSingleStep(0.05);
+    roughness->setValue(m_mountainView->roughness());
+    form->addRow("Шероховатость R:", roughness);
+    connect(roughness, QOverload<double>::of(&QDoubleSpinBox::valueChanged), m_mountainView,
+            &MountainWidget::setRoughness);
+
+    auto *seed = new QSpinBox(panel);
+    seed->setRange(0, 999999999);
+    seed->setValue(int(m_mountainView->seed()));
+    form->addRow("Seed:", seed);
+    connect(seed, QOverload<int>::of(&QSpinBox::valueChanged), m_mountainView,
+            [this](int value) { m_mountainView->setSeed(quint32(value)); });
+    auto *newSeed = new QPushButton("Новый случайный профиль", panel);
+    form->addRow(newSeed);
+    connect(newSeed, &QPushButton::clicked, seed, [seed] {
+        seed->setValue(int(QRandomGenerator::global()->bounded(1000000000u)));
+    });
+
+    m_stepSlider = new QSlider(Qt::Horizontal, panel);
+    m_stepSlider->setRange(0, m_mountainView->depth());
+    m_stepSlider->setValue(m_mountainView->depth());
+    m_stepLabel = new QLabel(QString("Шаг %1 из %1").arg(m_mountainView->depth()), panel);
+    form->addRow("Поколение:", m_stepSlider);
+    form->addRow(m_stepLabel);
+    connect(m_stepSlider, &QSlider::valueChanged, m_mountainView, &MountainWidget::setDisplayStep);
+    connect(m_stepSlider, &QSlider::valueChanged, this, [this](int step) {
+        m_stepLabel->setText(QString("Шаг %1 из %2").arg(step).arg(m_mountainView->depth()));
+    });
+    connect(depth, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int value) {
+        m_stepSlider->setMaximum(value);
+        m_stepSlider->setValue(value);
+        m_stepLabel->setText(QString("Шаг %1 из %1").arg(value));
+    });
+
+    auto *formula = new QLabel("h = (hL + hR) / 2 + random(−R·L, R·L)", panel);
+    formula->setWordWrap(true);
+    form->addRow(formula);
+    auto *column = new QVBoxLayout;
+    column->addWidget(panel);
+    column->addStretch();
+    layout->addLayout(column);
+    panel->setFixedWidth(260);
+    return tab;
 }
 
-void MainWindow::onRandomSeed()
+// Добавляет управление только опорными точками; касательные вычисляет виджет.
+QWidget *MainWindow::createBezierTab()
 {
-    quint32 s = QRandomGenerator::global()->generate() % 1000000u;
-    m_seedBox->setValue(int(s));
+    auto *tab = new QWidget(this);
+    auto *layout = new QVBoxLayout(tab);
+    auto *view = new BezierWidget(tab);
+    layout->addWidget(view, 1);
+    auto *buttons = new QHBoxLayout;
+    auto *reset = new QPushButton("Восстановить пример", tab);
+    auto *clear = new QPushButton("Очистить точки", tab);
+    buttons->addWidget(reset);
+    buttons->addWidget(clear);
+    buttons->addStretch();
+    layout->addLayout(buttons);
+    connect(reset, &QPushButton::clicked, view, &BezierWidget::resetExample);
+    connect(clear, &QPushButton::clicked, view, &BezierWidget::clearPoints);
+    return tab;
 }

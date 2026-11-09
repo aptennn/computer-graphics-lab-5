@@ -1,54 +1,44 @@
 #ifndef MOUNTAINWIDGET_H
 #define MOUNTAINWIDGET_H
 
-#include <QWidget>
-#include <QVector>
 #include <QPointF>
-#include <QRandomGenerator>
+#include <QVector>
+#include <QWidget>
 
+// Часть 2 — Лилия. Одномерный midpoint displacement для силуэта гор.
 class MountainWidget : public QWidget
 {
     Q_OBJECT
-
 public:
     explicit MountainWidget(QWidget *parent = nullptr);
 
-    // Параметры построения
+    // Устанавливают параметры генерации ломаной и создают её заново.
     void setDepth(int depth);
-    void setInitialDisplacement(double d);
-    void setRoughness(double r);
+    void setRoughness(double roughness);
     void setSeed(quint32 seed);
-    void setShowSteps(bool show);
+    // Выбирает показанное поколение: 0 — прямая, depth — конечная ломаная.
+    void setDisplayStep(int step);
 
-    int    depth() const              { return m_depth; }
-    double initialDisplacement() const{ return m_initialDisplacement; }
-    double roughness() const          { return m_roughness; }
-    quint32 seed() const              { return m_seed; }
-
-public slots:
-    void regenerate();
+    int depth() const { return m_depth; }
+    double roughness() const { return m_roughness; }
+    quint32 seed() const { return m_seed; }
+    int displayStep() const { return m_displayStep; }
+    int pointCountAtStep(int step) const { return m_steps.at(step).size(); }
+    QPointF pointAtStep(int step, int index) const { return m_steps.at(step).at(index); }
 
 protected:
+    // Рисует выбранное поколение, подгоняя весь профиль по высоте окна.
     void paintEvent(QPaintEvent *event) override;
 
 private:
-    struct Step {
-        QVector<QPointF> points;
-        QColor color;
-    };
-
+    // Строит поколения: h=(hL+hR)/2+random(-R*L, R*L).
     void buildMountain();
-    void midpointDisplace(QVector<QPointF> &pts, double displacement, int level);
-    void fitToWindow(QVector<QPointF> &pts) const;
-    QRectF boundingBox(const QVector<QPointF> &pts) const;
 
-    int     m_depth = 6;
-    double  m_initialDisplacement = 0.5;
-    double  m_roughness = 0.5;
+    int m_depth = 6;
+    double m_roughness = 0.5;
     quint32 m_seed = 12345;
-
-    QVector<Step> m_steps;
-    QVector<QPointF> m_final;
+    int m_displayStep = 6;
+    QVector<QVector<QPointF>> m_steps;
 };
 
 #endif // MOUNTAINWIDGET_H

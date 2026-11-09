@@ -26,3 +26,16 @@ target_link_libraries(computer_graphics_lab5
     PRIVATE
         Qt${QT_VERSION_MAJOR}::Widgets
 )
+
+include(CTest)
+if(BUILD_TESTING)
+    add_executable(lab5_algorithms_test
+        tests/algorithms.cpp
+        mountainwidget.cpp
+        mountainwidget.h
+    )
+    target_include_directories(lab5_algorithms_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+    target_link_libraries(lab5_algorithms_test PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+    add_test(NAME lab5_algorithms COMMAND lab5_algorithms_test)
+    set_tests_properties(lab5_algorithms PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+endif()

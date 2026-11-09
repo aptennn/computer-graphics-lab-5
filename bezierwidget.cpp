@@ -4,6 +4,19 @@
 #include <QPainter>
 #include <QPainterPath>
 
+namespace {
+// Возвращает координаты мыши для поддерживаемых CMake версий Qt 5 и Qt 6.
+QPointF mousePosition(const QMouseEvent *event)
+{
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    return event->position();
+#else
+    return event->localPos();
+#endif
+}
+}
+
+// Создаёт поле редактирования и начальный пример.
 BezierWidget::BezierWidget(QWidget *parent)
     : QWidget(parent)
 {
@@ -12,6 +25,7 @@ BezierWidget::BezierWidget(QWidget *parent)
     resetExample();
 }
 
+// Очищает точки и отменяет перетаскивание.
 void BezierWidget::clearPoints()
 {
     m_points.clear();
@@ -19,6 +33,7 @@ void BezierWidget::clearPoints()
     update();
 }
 
+// Возвращает шесть опорных точек демонстрационной кривой.
 void BezierWidget::resetExample()
 {
     m_points = {
@@ -28,6 +43,7 @@ void BezierWidget::resetExample()
     update();
 }
 
+// Ищет ближайшую опорную точку в пределах её видимого радиуса.
 int BezierWidget::pointAt(const QPointF &position) const
 {
     const qreal r2 = PointRadius * PointRadius;
@@ -39,6 +55,8 @@ int BezierWidget::pointAt(const QPointF &position) const
     return -1;
 }
 
+// Для соседних опорных точек вычисляет управляющие точки Безье.
+// На стыке соседних кубических сегментов касательные коллинеарны, как в лекции 7.
 QPainterPath BezierWidget::makeCurve() const
 {
     QPainterPath path;
@@ -64,6 +82,7 @@ QPainterPath BezierWidget::makeCurve() const
     return path;
 }
 
+// Показывает опорную ломаную, кубическую кривую и доступные для правки точки.
 void BezierWidget::paintEvent(QPaintEvent *event)
 {
     Q_UNUSED(event);
@@ -98,11 +117,15 @@ void BezierWidget::paintEvent(QPaintEvent *event)
     painter.drawText(14, height() - 14, "Пунктир — ломаная опорных точек; голубая линия — составная кубическая кривая Безье.");
 }
 
+// Левый клик добавляет или захватывает точку, правый удаляет её.
 void BezierWidget::mousePressEvent(QMouseEvent *event)
 {
-    const int index = pointAt(event->position());
+    const int index = pointAt(mousePosition(event));
     if (event->button() == Qt::RightButton) {
-        if (index >= 0) m_points.removeAt(index);
+        if (index >= 0) {
+            m_points.removeAt(index);
+            m_draggedPoint = -1;
+        }
         update();
         return;
     }
@@ -111,19 +134,21 @@ void BezierWidget::mousePressEvent(QMouseEvent *event)
     if (index >= 0) {
         m_draggedPoint = index;
     } else {
-        m_points.append(event->position());
+        m_points.append(mousePosition(event));
         m_draggedPoint = m_points.size() - 1;
     }
     update();
 }
 
+// Перемещает захваченную опорную точку и перестраивает кривую.
 void BezierWidget::mouseMoveEvent(QMouseEvent *event)
 {
     if (m_draggedPoint < 0) return;
-    m_points[m_draggedPoint] = event->position();
+    m_points[m_draggedPoint] = mousePosition(event);
     update();
 }
 
+// Завершает перетаскивание опорной точки.
 void BezierWidget::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_UNUSED(event);
